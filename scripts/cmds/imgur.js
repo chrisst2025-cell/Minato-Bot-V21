@@ -1,37 +1,58 @@
 const axios = require('axios');
 
 module.exports = {
- config: {
- name: "imgur",
- version: "1.0",
- author: "ArYAN",
- countDown: 5,
- role: 0,
- shortDescription: {
- en: "Upload image to imbb"
- },
- longDescription: {
- en: "Upload image to imbb by replying to photo"
- },
- category: "image",
- guide: {
- en: ""
- }
- },
+  config: {
+    name: "imgur",
+    version: "1.5.0",
+    author: "S1FU",
+    countDown: 5,
+    role: 0,
+    category: "ᴜᴛɪʟɪᴛʏ",
+    shortDescription: { en: "ᴜᴘʟᴏᴀᴅ ᴍᴇᴅɪᴀ ᴛᴏ ɪᴍɢᴜʀ ᴠɪᴀ ᴀᴅᴠᴀɴᴄᴇᴅ ᴀᴘɪ" },
+    guide: { en: "『 ʀᴇᴘʟʏ ᴛᴏ ᴀɴ ɪᴍᴀɢᴇ ᴏʀ ᴠɪᴅᴇᴏ 』" }
+  },
 
- onStart: async function ({ api, event }) {
- const linkanh = event.messageReply?.attachments[0]?.url;
- if (!linkanh) {
- return api.sendMessage('Please reply to an image.', event.threadID, event.messageID);
- }
+  onStart: async function ({ api, event, message }) {
+    const reply = event.messageReply;
 
- try {
- const res = await axios.get(`https://aryan-noobs-apis.onrender.com/imgur?link=${encodeURIComponent(linkanh)}`);
- const juswa = res.data.uploaded.image;
- return api.sendMessage(juswa, event.threadID, event.messageID);
- } catch (error) {
- console.log(error);
- return api.sendMessage('Failed to upload image to imbb.', event.threadID, event.messageID);
- }
- }
-}
+    if (!reply || !reply.attachments || reply.attachments.length === 0) {
+      return message.reply("✧ 𐃷 ᴘʟᴇᴀsᴇ ʀᴇᴘʟʏ ᴛᴏ ᴍᴇᴅɪᴀ Ი𐑼 𖹭");
+    }
+
+    message.reaction("🐋💨🦖🐦🐍🤡", event.messageID);
+
+    try {
+
+      const apiEndpoint = "https://maybexenos.vercel.app/uploader/imgur";
+
+      let resultMsg = "!__──ɪᴍɢᴜʀ ᴜᴘʟᴏᴀᴅ──__!\n\n";
+
+      const uploadPromises = reply.attachments.map(async (attachment, index) => {
+        try {
+          const res = await axios.get(`${apiEndpoint}?link=${encodeURIComponent(attachment.url)}`);
+
+          const link = res.data.uploaded.image;
+
+          if (link) {
+            return `  ᯓ ʟɪɴᴋ ${index + 1}: ${link}`;
+          } else {
+            return `  ᯓ ʟɪɴᴋ ${index + 1}: ᴜᴘʟᴏᴀᴅ ғᴀɪʟᴇᴅ`;
+          }
+        } catch (e) {
+          return `  ᯓ ʟɪɴᴋ ${index + 1}: ᴄᴏɴɴᴇᴄᴛɪᴏɴ ᴇʀʀᴏʀ`;
+        }
+      });
+
+      const results = await Promise.all(uploadPromises);
+      resultMsg += results.join("\n");
+      resultMsg += "\n";
+
+      message.reaction("🎀🐦🦖🦆💨✨🪶", event.messageID);
+      return message.reply(resultMsg);
+
+    } catch (err) {
+      message.reaction("🥲😢😅😓🫤😢🤧", event.messageID);
+      return message.reply("✧ sᴇʀᴠᴇʀ ᴅᴏᴡɴ ᴏʀ ɪɴᴠᴀʟɪᴅ ᴀᴘɪ Ი𐑼 𖹭");
+    }
+  }
+};
